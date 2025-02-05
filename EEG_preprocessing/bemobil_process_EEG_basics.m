@@ -200,7 +200,7 @@ else % no chanlocs present, use default chanlocs
     EEG = pop_chanedit(EEG,'lookup',standard_channel_locations_path);
 end
 
-assert(all(~cellfun(@isempty,{EEG.chanlocs.X})),'No chanlocs were present, could be loaded from file, or looked up in the standard dictionary!')
+%assert(all(~cellfun(@isempty,{EEG.chanlocs.X})),'No chanlocs were present, could be loaded from file, or looked up in the standard dictionary!')
 
 
 % this has to happen after loading chanlocs because chanlocs are being completely overwritten in the process

@@ -1,7 +1,7 @@
 
 function motionOut = bemobil_bids_motionconvert(motionIn, objects, streamsConfig)
 % This function performs minimal preprocessing and channel sorting for motion data 
-% Follows BIDS specification for MOTION data   
+% Follows WIP BIDS motion specification  
 %--------------------------------------------------------------------------
 
 newCell = {}; 
@@ -34,13 +34,9 @@ for iM = 1:numel(motionIn)
     %                                                    'headRigid_rotY', 'rightHand_rotY';, ...
     %                                                    'headRigid_rotZ', 'rightHand_rotZ'};
     %
-    % If nothing is found using these methods, no stream is processed as
+    % if nothing is found using these methods, no stream is processed as
     % quaternion
-    % Search by channel names is prioritized
-    % 
-    % If option streamsConfig{streamIndex}.quaternions.keep_quats = 1, 
-    % the BIDS formatted data will contain quaternion channels not Euler
-    % angles
+    % search by channel names is prioritized
     
     % quaternion [w,x,y,z] components, in this order
     % w is the non-axial component
@@ -68,12 +64,6 @@ for iM = 1:numel(motionIn)
         
         if isfield(streamsConfig{iM}.quaternions, 'output_order')
             eulerComponents         = streamsConfig{iM}.euler_components;
-        end
-        
-        if isfield(streamsConfig{iM}.quaternions, 'keep_quats')
-            keepQuats               = streamsConfig{iM}.quaternions.keep_quats;
-        else
-            keepQuats               = 0; 
         end
     end
     
@@ -222,28 +212,18 @@ for iM = 1:numel(motionIn)
         end
         
         if quatFound
-            
             % convert from quaternions to euler angles
-            orientationInQuaternion    = dataPre(quaternionIndices,:);
-            orientationInEuler         = util_quat2eul(orientationInQuaternion'); % the BeMoBIL util script
+            orientationInQuaternion    = dataPre(quaternionIndices,:)';
+            orientationInEuler         = util_quat2eul(orientationInQuaternion); % the BeMoBIL util script
             orientationInEuler         = orientationInEuler';
             occindices                 = find(orientationInQuaternion(1,:) == missingval);
             orientationInEuler(:,occindices) = nan;
-            orientationInQuaternion(:,occindices) = nan;
             
             % unwrap euler angles
             orientationInEuler  = unwrap(orientationInEuler, [], 2);
-            
-            % assing Euler or quat angles to orientation channel group
-            if keepQuats
-                orientation     = orientationInQuaternion; 
-            else
-                orientation     = orientationInEuler;
-            end
         else
-            orientationInEuler = [];
-            orientation = orientationInEuler;
-            quaternionIndices = [];  
+            orientationInEuler = []; 
+            quaternionIndices = []; 
         end
         
         if cartFound
@@ -261,22 +241,15 @@ for iM = 1:numel(motionIn)
         otherData           = dataPre(otherChans,:);
         
         % concatenate the converted data
-        objectData         = [orientation; position; otherData];
+        objectData         = [orientationInEuler; position; otherData];
         dataPost           = [dataPost; objectData];
         
         % enter channel information
-        for ei = 1:size(orientation,1)
-            if keepQuats
-                motionStream.label{end + 1}                 = [objects{ni} '_quat_' quaternionComponents{ei}];
-                motionStream.hdr.label{end + 1}             = [objects{ni} '_quat_' quaternionComponents{ei}];
-                motionStream.hdr.chantype{end + 1}          = 'ORNT';
-                motionStream.hdr.chanunit{end + 1}          = 'n/a';
-            else
-                motionStream.label{end + 1}                 = [objects{ni} '_eul_' eulerComponents{ei}];
-                motionStream.hdr.label{end + 1}             = [objects{ni} '_eul_' eulerComponents{ei}];
-                motionStream.hdr.chantype{end + 1}          = 'ORNT';
-                motionStream.hdr.chanunit{end + 1}          = 'rad';
-            end
+        for ei = 1:size(orientationInEuler,1)
+            motionStream.label{end + 1}                 = [objects{ni} '_eul_' eulerComponents{ei}];
+            motionStream.hdr.label{end + 1}             = [objects{ni} '_eul_' eulerComponents{ei}];
+            motionStream.hdr.chantype{end + 1}          = 'ORNT';
+            motionStream.hdr.chanunit{end + 1}          = 'rad';
         end
         
         for ci = 1:size(position,1)

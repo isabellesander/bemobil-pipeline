@@ -75,10 +75,7 @@ function bemobil_xdf2bids(config, varargin)
 %--------------------------------------------------------------------------
 %       config.phys.streams{1}.stream_name             = 'force1';             % optional
 %
-% 
-% 
-%
-%
+%--------------------------------------------------------------------------
 % Optional Inputs :
 %       Provide optional inputs as key value pairs.
 %       Usage:
@@ -93,7 +90,6 @@ function bemobil_xdf2bids(config, varargin)
 % Authors :
 %       Sein Jeung (seinjeung@gmail.com) & Soeren Grothkopp (s.grothkopp@secure.mailbox.org)
 %--------------------------------------------------------------------------
-
 
 % add load_xdf to path
 ft_defaults
@@ -166,22 +162,17 @@ if importMotion
     end
     
     % default channel types and units
-    % following CMIXF-12, BIDS v1.8.0 appendix on Units
     motion_type.POS.unit        = 'm';
     motion_type.ORNT.unit       = 'rad';
     motion_type.VEL.unit        = 'm/s';
-    motion_type.GYRO.unit       = 'rad/s';
-    motion_type.ACCEL.unit      = 'm/s^2';
-    motion_type.ANGACC.unit     = 'rad/s^2';
+    motion_type.ANGVEL.unit     = 'r/s';
+    motion_type.ACC.unit        = 'm/s^2';
+    motion_type.ANGACC.unit     = 'r/s^2';
     motion_type.MAGN.unit       = 'fm';
-    motion_type.JNTANG.unit     = 'rad';
+    motion_type.JNTANG.unit     = 'r';
     motion_type.LATENCY.unit    = 'seconds';
     
 end
-
-% BIDS-motion Keywords list (according to BEP 029, Jan 2023)
-componentKeywords       = {'x' ,'y', 'z', 'quat_x', 'quat_y', 'quat_z', 'quat_w', 'n/a'};
-channelTypeKeywords     = {'ACCEL', 'ANGACC', 'GYRO', 'JNTANG', 'LATENCY', 'MAGN', 'MISC', 'ORNT', 'POS', 'TIME', 'VEL'};
 
 % physio-related fields
 %--------------------------------------------------------------------------
@@ -711,8 +702,8 @@ if ~isempty(xdfmarkers) > 0
     ax.YAxis.MinorTickValues = ax.YAxis.Limits(1):0.2:ax.YAxis.Limits(2);
     
     [filepath,name,~] = fileparts(cfg.dataset);
-    savefig(raw_fig,fullfile(filepath,[name '_raw-data']))
-    print(raw_fig,fullfile(filepath,[name '_raw-data']),'-dpng')
+    savefig(raw_fig,fullfile(filepath,[name + '_raw-data']))
+    print(raw_fig,fullfile(filepath,[name + '_raw-data']),'-dpng')
     close(raw_fig)
     
 else
@@ -731,7 +722,7 @@ if importEEG % This loop is always executed in current version
     % save eeg start time
     eegStartTime                = eeg.time{1}(1);
     
-    % eeg metadata construction
+    % eeg metadata constructio
     %----------------------------------------------------------------------
     eegcfg                              = cfg;
     eegcfg.datatype                     = 'eeg';
@@ -934,10 +925,6 @@ if importMotion
             end
         end
         
-        if isempty(streamInds)
-            continue; 
-        end
-        
         % select stream configuration
         streamsConfig       = config.motion.streams(streamConfigInds);
         
@@ -965,8 +952,6 @@ if importMotion
                 disp(['Using custom unit ' config.motion.(motionChanType).unit ' for type ' motionChanType])
             elseif isfield(motion_type, motionChanType)
                 motion.hdr.chanunit{ci} = motion_type.(motionChanType).unit;
-            else
-                motion.hdr.chanunit{ci} = 'n/a';
             end
             
             splitlabel                                      = regexp(motion.hdr.label{ci}, '_', 'split');
@@ -977,7 +962,7 @@ if importMotion
             
             % assign object names and anatomical positions
             for iN = 1:numel(rb_names)
-                if contains(lower(motion.hdr.label{ci}),lower(rb_names{iN})) && ~contains(lower(motion.hdr.label{ci}), 'latency')
+                if contains(lower(motion.hdr.label{ci}),lower(rb_names{iN}))
                     motioncfg.channels.tracked_point{end+1}        = rb_names{iN};
                     motioncfg.channels.placement{end+1}            = rb_anat{iN};
                 end
@@ -989,20 +974,8 @@ if importMotion
                 motioncfg.channels.placement{end+1}            = 'n/a';
             end
             
-            if strcmp(splitlabel{end-1}, 'quat')
-                motioncfg.channels.component{end+1}    = ['quat_' splitlabel{end}];
-            else
-                motioncfg.channels.component{end+1}    = splitlabel{end};
-            end
+            motioncfg.channels.component{end+1}    = splitlabel{end};
             
-            % make sure that the type and component keywords conform to BIDS 
-            if ~any(strcmp(motioncfg.channels.type{end},channelTypeKeywords))
-                motioncfg.channels.type{end}         = 'MISC';
-            end
-            
-            if ~any(strcmp(motioncfg.channels.component{end},componentKeywords))
-                motioncfg.channels.component{end}    = 'n/a'; 
-            end
         end
         
         % tracking system-specific information

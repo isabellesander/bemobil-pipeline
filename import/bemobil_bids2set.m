@@ -272,8 +272,8 @@ for iSub = 1:numel(subDirList)
 end
 
 % delete the temporary directory
-disp(['removing ' tempDir])
-rmdir(tempDir, 's')
+%disp(['removing ' tempDir])
+%rmdir(tempDir, 's')
 
 % now synchronize and merge the streams
 %--------------------------------------------------------------------------
@@ -317,12 +317,13 @@ for iSub = 1:numel(subDirList)
         % resample and merge EEG
         %------------------------------------------------------------------
         if isempty(config.resample_freq)
-            newSRate        = 250;
+            newSRate        = 500;
             warning('No resample frequency specified - data is still resampled to the default 250 Hz')
         else
             newSRate        = config.resample_freq;
         end
 
+        
         % initializa a matrix storing EEG first and last time stamps (this is used to synch other streams)
         eegTimes = {};
 
