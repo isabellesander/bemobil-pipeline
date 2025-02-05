@@ -1,3 +1,7 @@
 *.asv
 *fdt
 AMICA/
+
+#temps
+.*
+**/.*
