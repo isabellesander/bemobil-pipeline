@@ -1,0 +1,12 @@
+{
+    "xdf-names": "EyeLogic",
+    
+    "bids-names": [
+        "EyeTracking"
+    ],
+    
+    "Manufacturer":"EyeLogic",
+    "ManufacturersModelName":"LogicOne",
+    "SoftwareVersions": "",
+    "SamplingFrequency": 250
+}

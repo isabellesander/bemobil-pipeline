@@ -1,0 +1,6 @@
+{
+    "bids-source-folder": "data",
+    "bids-target-folder": "-BIDS",
+    "other-data-types": "physio",
+    "raw-eeglab-folder": "2_EEGLAB-data"
+}

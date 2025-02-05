@@ -1,0 +1,6 @@
+{
+    "subject": "2",
+    "overwrite": "on",
+
+    "session-names": ["a", "b"]
+}
